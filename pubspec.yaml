@@ -1,0 +1,22 @@
+name: open_file_test
+description: Open File Test.
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.0.5 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  open_file: ^3.3.2
+  path_provider: ^2.0.15
+  permission_handler: ^10.3.0
+
+dev_dependencies:
+  dart_lintz: ^1.2.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
