@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -31,7 +32,11 @@ class _MainAppState extends State<MainApp> {
   late StreamController<List<File>> _streamController;
 
   // this is from the 'path_provider' package
-  Future<Directory> get directory => getApplicationDocumentsDirectory();
+  Future<Directory> get directory async {
+    final Directory dir = await getApplicationDocumentsDirectory();
+    log('PathProvider: ${dir.path}');
+    return dir;
+  }
 
   @override
   void initState() {
@@ -108,10 +113,13 @@ class _MainAppState extends State<MainApp> {
     try {
       // this permission shouldn't be required
       // since we are reading from our own app's directory
-      final PermissionStatus status = await Permission.storage.request();
-      print('permission status=$status');
+      // "external-files-path" represents the apps own
+      // private external storage
+      // eg. "/sdcard/Android/data/com.example.app/files"
+      // but what about when this file is stored in
+      // eg. "/data/user/0/com.example.app"
+      await Permission.storage.request();
     } catch (e) {
-      print(e);
       _showDialog('Permission Failed', e.toString());
     }
 
@@ -119,9 +127,11 @@ class _MainAppState extends State<MainApp> {
       // when attempting to open a file within our own app's directory
       // this will fail,
       final OpenResult result = await OpenFile.open(file.path);
-      print('openresult type=${result.type} message=${result.message}');
+      final String message = 'Type: ${result.type}\nMessage: ${result.message}';
+      if (result.type != ResultType.done) {
+        _showDialog('OpenFile Result', message);
+      }
     } catch (e) {
-      print(e);
       _showDialog('OpenFile Failed', e.toString());
     }
   }
