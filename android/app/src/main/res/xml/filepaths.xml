@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-  <!-- This allows access to any file or directory within the device's file system. -->
-  <root-path name="root"
-    path="." />
-
-  <!-- This allows access to a directory within the app's private external storage area. -->
-  <!-- <external-files-path name="external_storage_directory" path="." /> -->
-
-</resources>
+<!-- "root-path" allows access to any file or directory within the device's file system. -->
+<!-- "external-files-path" allows access to a directory within the app's private external storage area. -->
 <!-- "files-path" represents the internal storage area specific to your app. -->
-<!-- <paths>
-  <files-path name="absolute_files" path="/" />
-  <files-path name="relative_files" path="." />
-  <files-path name="app_flutter" path="app_flutter/" />
+
+<!-- <resources>
+  <root-path name="root" path="." />
+  <external-files-path name="external-files-path" path="." />
+  <files-path name="files-path" path="." />
+</resources> -->
+
+
+<!-- <paths xmlns:android="http://schemas.android.com/apk/res/android">
+  <external-files-path name="external-files-path" path="." />
+  <files-path name="absolute" path="/" />
+  <files-path name="relative" path="." />
+  <files-path name="app_flutter" path="app_flutter" />
 </paths> -->
+
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+  <files-path name="files-path"
+    path="../" />
+</paths>

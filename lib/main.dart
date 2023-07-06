@@ -44,14 +44,12 @@ class Main extends StatefulWidget {
 
 class _MainState extends State<Main> {
   late List<File> _files;
+  late DirectoryOption _directoryOption;
   late StreamController<List<File>> _streamController;
 
-  /// This is from the 'path_provider' package.
-  ///
-  /// A directory where the application may place data that is user-generated.
   Future<Directory> get directory async {
-    final Directory dir = await getApplicationDocumentsDirectory();
-    log('PathProvider: ${dir.path}');
+    final Directory dir = await _directoryOption.directory;
+    log(dir.path);
     return dir;
   }
 
@@ -59,6 +57,7 @@ class _MainState extends State<Main> {
   void initState() {
     super.initState();
     _files = <File>[];
+    _directoryOption = DirectoryOption.documents;
     _streamController = StreamController<List<File>>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _listFiles();
@@ -76,9 +75,20 @@ class _MainState extends State<Main> {
             onPressed: _openAppSettings,
           ),
           IconButton(
+            icon: const Icon(Icons.directions),
+            onPressed: () {
+              _getDirectorySelector().then((DirectoryOption? value) {
+                if (value != null) {
+                  _directoryOption = value;
+                  _listFiles();
+                }
+              });
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.create_new_folder),
             onPressed: () {
-              _getFileTypeSelector().then((String? value) {
+              _getFileTypeSelector().then((FileType? value) {
                 if (value != null) {
                   _createFile(value);
                 }
@@ -133,10 +143,10 @@ class _MainState extends State<Main> {
   }
 
   /// Create a file with the specified [fileType].
-  Future<void> _createFile(String fileType) async {
+  Future<void> _createFile(FileType fileType) async {
     final Directory dir = await directory;
     final String name = DateTime.now().millisecondsSinceEpoch.toString();
-    final File file = File('${dir.path}/$name.$fileType');
+    final File file = File('${dir.path}/$name.${fileType.name}');
 
     file.writeAsStringSync('test');
 
@@ -191,29 +201,43 @@ class _MainState extends State<Main> {
     );
   }
 
+  /// Show a dialog to select a directory.
+  ///
+  /// This allows changing where the files are viewed/stored.
+  Future<DirectoryOption?> _getDirectorySelector() {
+    return showDialog<DirectoryOption>(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text('Choose Directory'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: DirectoryOption.values.map((DirectoryOption e) {
+              return SimpleDialogOption(
+                child: Text(e.label),
+                onPressed: () => Navigator.pop(context, e),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
   /// Show a dialog to select a file type.
   ///
   /// This allows changing the file's extension.
-  Future<String?> _getFileTypeSelector() {
-    final List<String> fileTypes = <String>[
-      'html',
-      'json',
-      'mp4',
-      'mp3',
-      'pdf',
-      'txt',
-    ];
-
-    return showDialog<String>(
+  Future<FileType?> _getFileTypeSelector() {
+    return showDialog<FileType>(
       context: context,
       builder: (_) {
         return AlertDialog(
           title: const Text('Choose File Type'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: fileTypes.map((String e) {
+            children: FileType.values.map((FileType e) {
               return SimpleDialogOption(
-                child: Text(e),
+                child: Text(e.name),
                 onPressed: () => Navigator.pop(context, e),
               );
             }).toList(),
@@ -299,6 +323,43 @@ class _MainState extends State<Main> {
   // }
 }
 
+/// All the possible directory options.
+enum DirectoryOption {
+  documents,
+  support,
+  external,
+  temporary,
+}
+
+extension on DirectoryOption {
+  Future<Directory> get directory async {
+    switch (this) {
+      case DirectoryOption.documents:
+        return getApplicationDocumentsDirectory();
+      case DirectoryOption.support:
+        return getApplicationSupportDirectory();
+      case DirectoryOption.external:
+        return (await getExternalStorageDirectory())!;
+      case DirectoryOption.temporary:
+        return getTemporaryDirectory();
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case DirectoryOption.documents:
+        return 'application_documents';
+      case DirectoryOption.support:
+        return 'application_support';
+      case DirectoryOption.external:
+        return 'external_storage';
+      case DirectoryOption.temporary:
+        return 'temporary';
+    }
+  }
+}
+
+/// All of the possible file opener packages
 enum FileOpener {
   androidIntent,
   openFile,
@@ -319,4 +380,14 @@ extension on FileOpener {
       //   return 'flutter_open_filez';
     }
   }
+}
+
+/// All the possible file types.
+enum FileType {
+  html,
+  json,
+  mp4,
+  mp3,
+  pdf,
+  txt,
 }
